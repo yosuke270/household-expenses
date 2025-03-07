@@ -2,12 +2,15 @@
 #自然言語で入力されたデータを分析して家計簿をつける。「すき家に３００円」と入力すれば、LLMが食費と推定してデータベースに登録する
 import os
 from openai import OpenAI
+import datetime
 
 api_key = os.environ["ChatGPT_API"]
 client = OpenAI(api_key=api_key)
 
 print("出費を入力してください")
 input = input()
+today = datetime.datetime.now()
+print(today)
 
 prompt = f"""\
 ## 指示
@@ -18,7 +21,7 @@ prompt = f"""\
 - 出力は必ずOUTPUT_exampleに従ってください。
 - INPUTには、話し言葉で入力されたデータです。うまく解析してください。
 - カテゴリは、食費、交通費、日用品、居住費、医療費から選ばれます。
-- 日付がわからない場合は、今日の日付を入力してください。
+- 日付は、{today}をOUTPUT_exampleに従って出力してください。
 - inputが不明な場合は、「エラー：入力が不明」と出力してください。
 - 内容は、入力された内容から抽出してください。
 - inputに複数のデータが入力された場合はOUTPUT_exampleを参考に複数の出力をしてください。
@@ -30,12 +33,12 @@ prompt = f"""\
 内容　　：ラーメン
 カテゴリ：食費
 金額　　：600円
-日付　　：2023年1月1日
+日付　　：○○○○年○○月○○日
 =====
 内容　　：洋服
 カテゴリ：日用品
 金額　　：1111円
-日付　　：2023年1月1日
+日付　　：○○○○年○○月○○日
 """
 
 
