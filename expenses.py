@@ -4,7 +4,10 @@ import os
 from openai import OpenAI
 import datetime
 import MySQLdb
-
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.rc('font', family='Meiryo')  # Windowsの場合
 
 def ask_LLM():
     api_key = os.environ["ChatGPT_API"]
@@ -17,10 +20,10 @@ def ask_LLM():
     weekday = day_info.weekday()
     weekday += 1
      # 曜日を日本語で取得
-    weekdays_jp = ["月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日", "日曜日"]
-    weekday_jp = weekdays_jp[weekday]
-    print(today)
-    print(weekday + 1)
+   # weekdays_jp = ["月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日", "日曜日"]
+   # weekday_jp = weekdays_jp[weekday]
+   # print(today)
+    #print(weekday_jp)
 
     prompt = f"""\\ 
     ## 指示
@@ -91,5 +94,59 @@ def mysql_connect(item_id, amount, date, memo, week_id):
     cur.close()
     conn.close()
 
+def fetch_data():
+    # データベースに接続
+    conn = MySQLdb.connect(
+        user="root",
+        passwd="Funao270",
+        host="localhost",
+        db="household_expenses_db"
+    )
+    cur = conn.cursor()
+
+    # データを取得
+    sql = "SELECT item_id, SUM(amount) AS total_amount FROM amount GROUP BY item_id"
+    cur.execute(sql)
+    rows = cur.fetchall()
+
+    # データをDataFrameに変換
+    df = pd.DataFrame(rows, columns=["item_id", "total_amount"])
+
+    # データベース接続を閉じる
+    cur.close()
+    conn.close()
+
+    return df
+
+def plot_graph(df):
+    # 項目名を設定
+    item_labels = {
+        1: "食費",
+        2: "住居費",
+        3: "水道光熱費",
+        4: "消耗品",
+        5: "交際費",
+        6: "交通費",
+        7: "自己投資費",
+        8: "その他"
+    }
+
+    # item_idを日本語ラベルに変換
+    df["item_name"] = df["item_id"].map(item_labels)
+
+    # グラフを作成
+    plt.figure(figsize=(10, 6))
+    plt.bar(df["item_name"], df["total_amount"], color="skyblue")
+    plt.title("カテゴリ別支出合計", fontsize=16)
+    plt.xlabel("カテゴリ", fontsize=12)
+    plt.ylabel("支出額 (円)", fontsize=12)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    # グラフを表示
+    plt.show()
+
 if __name__ == "__main__":
     ask_LLM()
+    data = fetch_data()
+    plot_graph(data)
