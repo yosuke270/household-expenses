@@ -1,4 +1,4 @@
-from flask import Flask, request, abort
+from flask import Flask, request, abort, send_from_directory
 from linebot.v3 import (
     WebhookHandler
 )
@@ -24,10 +24,12 @@ import matplotlib.pyplot as plt
 import matplotlib
 from openai import OpenAI
 import logging  # logging モジュールをインポート
+from urllib.parse import quote
+from PIL import Image  # Pillowライブラリをインポート
 
 # 日本語フォントを設定
 matplotlib.rc('font', family='Meiryo')
-
+matplotlib.use('Agg')
 app = Flask(__name__)
 
 # ロガーを設定
@@ -38,7 +40,7 @@ logger = logging.getLogger(__name__)
 configuration = Configuration(access_token=os.environ["LINE_CHANNEL_ACCESS_TOKEN"])
 handler = WebhookHandler(os.environ["LINE_CHANNEL_SECRET"])
 
-
+ngrok_url = "https://5fe9-240b-10-bf66-df00-4deb-56ac-1ef8-1461.ngrok-free.app/"
 
 # デフォルトのルートを追加
 @app.route("/", methods=["GET"])
@@ -70,23 +72,54 @@ def callback():
 def handle_message(event):
     userinput = event.message.text  # ユーザーからの入力を取得
     LLManswer = ask_LLM(userinput)  # LLMに問い合わせ
+    data = fetch_data()
+    # グラフを作成
+    plot_graph(data)
+
+    # グラフを一時ファイルに保存
+    local_graph_path = os.path.abspath("output_graph.png")
+    try:
+        plt.savefig(local_graph_path)
+        logger.info("グラフを保存しました。")
+
+        # 画像をリサイズ
+        with Image.open(local_graph_path) as img:
+            img = img.resize((240, 240))  # 240×240にリサイズ
+            img.save(local_graph_path)  # 同じパスに上書き保存
+            logger.info("画像を240×240にリサイズしました。")
+
+    except Exception as e:
+        logger.error(f"グラフの保存中にエラーが発生しました: {e}")
+        return  # エラーが発生した場合はここで処理を終了する
+
+    if not os.path.exists(local_graph_path):
+        logger.error(f"グラフファイルが見つかりません: {local_graph_path}")
+        return
     logger.info("###################")
     logger.info("送信側")
+    # グラフ画像をLINEで送信
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message_with_http_info(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text=LLManswer)]
+        # パーセントエンコードを適用
+        encoded_graph_path = quote(os.path.join(ngrok_url, "output_graph.png"), safe=":/")
+        try:
+            line_bot_api.reply_message_with_http_info(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[
+                        {
+                            "type": "image",
+                            "originalContentUrl": encoded_graph_path,
+                            "previewImageUrl": encoded_graph_path
+                        }
+                    ]
+                )
             )
-        )
-    
-    #line_bot_api.reply_message(
-     #   event.reply_token,
-      #  TextSendMessage(text=result)  # 結果をLINEに返信
-    #)
-
+        except Exception as e:
+            logger.error(f"LINEメッセージの送信中にエラーが発生しました: {e}")
+            logger.error(f"送信しようとしたURL: {encoded_graph_path}")
 def ask_LLM(user_input):
+    logger.info(user_input)
     api_key = os.environ["ChatGPT_API"]
     client = OpenAI(api_key=api_key)
 
@@ -125,8 +158,41 @@ def ask_LLM(user_input):
         ]
     )
 
-    output = response.choices[0].message.content.strip()
+    output = response.choices[0].message.content.strip().split(',')
+    item_id, amount, date, memo, week_id = output[0], output[1], output[2], output[3], output[4]
+    mysql_connect(item_id, amount, date, memo, week_id)
+
     return output
+
+def mysql_connect(item_id, amount, date, memo, week_id):
+
+    #データベースに接続する
+    conn = MySQLdb.connect(
+        user="root",
+        passwd="Funao270",
+        host="localhost",
+        db="household_expenses_db")
+    
+    #カーソルを取得する
+    cur = conn.cursor()
+
+    #SQL文を実行する
+    sql = "INSERT INTO amount (item_id, amount, date, memo, week_id) VALUES (%s, %s, %s, %s, %s)"
+    # item_id  1 食費  2 住居費  3 水道光熱費  4 消耗品  5 交際費 6 交通費  7 自己投資費  8 その他
+    # week_id  1 Monday 2 Tuesday 3 Wednesday 4 Thursday 5 Friday 6 Saturday 7 Sunday
+    cur.execute(sql, (item_id, amount, date, memo, week_id))
+    # コミットして変更を確定する
+    conn.commit()
+
+    # データを取得するためのSQL文を実行する
+    cur.execute("SELECT * FROM amount")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+
+     #切断する
+    cur.close()
+    conn.close()
 
 def fetch_data():
     # データベースに接続
@@ -179,6 +245,10 @@ def plot_graph(df):
 
     # グラフを表示
     plt.show()
+
+@app.route("/<filename>")
+def serve_image(filename):
+    return send_from_directory(".", filename)
 
 if __name__ == "__main__":
     logger.info("Starting server...")  # サーバー起動時のログ
