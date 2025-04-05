@@ -1,29 +1,98 @@
-#家計簿をつけるアプリ
-#自然言語で入力されたデータを分析して家計簿をつける。「すき家に３００円」と入力すれば、LLMが食費と推定してデータベースに登録する
+from flask import Flask, request, abort
+from linebot.v3 import (
+    WebhookHandler
+)
+from linebot.v3.exceptions import (
+    InvalidSignatureError
+)
+from linebot.v3.messaging import (
+    Configuration,
+    ApiClient,
+    MessagingApi,
+    ReplyMessageRequest,
+    TextMessage
+)
+from linebot.v3.webhooks import (
+    MessageEvent,
+    TextMessageContent
+)
 import os
-from openai import OpenAI
 import datetime
 import MySQLdb
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.rc('font', family='Meiryo')  # Windowsの場合
+from openai import OpenAI
+import logging  # logging モジュールをインポート
 
-def ask_LLM():
+# 日本語フォントを設定
+matplotlib.rc('font', family='Meiryo')
+
+app = Flask(__name__)
+
+# ロガーを設定
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# LINE APIの設定
+configuration = Configuration(access_token=os.environ["LINE_CHANNEL_ACCESS_TOKEN"])
+handler = WebhookHandler(os.environ["LINE_CHANNEL_SECRET"])
+
+
+
+# デフォルトのルートを追加
+@app.route("/", methods=["GET"])
+def index():
+    return "This is the default route. Use /callback for LINE Webhook.", 200
+
+# LINEからのWebhookを受け取るエンドポイント
+@app.route("/callback", methods=['POST'])
+def callback():
+    logger.info("A")
+    # get X-Line-Signature header value
+    signature = request.headers['X-Line-Signature']
+
+    # get request body as text
+    body = request.get_data(as_text=True)
+    app.logger.info("Request body: " + body)
+    logger.info("Request body: " + body)  # デバッグ用
+    # handle webhook body
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        app.logger.info("Invalid signature. Please check your channel access token/channel secret.")
+        abort(400)
+
+    return 'OK'
+
+# メッセージイベントの処理
+@handler.add(MessageEvent, message=TextMessageContent)
+def handle_message(event):
+    userinput = event.message.text  # ユーザーからの入力を取得
+    LLManswer = ask_LLM(userinput)  # LLMに問い合わせ
+    logger.info("###################")
+    logger.info("送信側")
+    with ApiClient(configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.reply_message_with_http_info(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=LLManswer)]
+            )
+        )
+    
+    #line_bot_api.reply_message(
+     #   event.reply_token,
+      #  TextSendMessage(text=result)  # 結果をLINEに返信
+    #)
+
+def ask_LLM(user_input):
     api_key = os.environ["ChatGPT_API"]
     client = OpenAI(api_key=api_key)
 
-    print("出費を入力してください")
-    user_input = input()
     day_info = datetime.datetime.now()
     today = day_info.strftime("%Y-%m-%d")
-    weekday = day_info.weekday()
-    weekday += 1
-     # 曜日を日本語で取得
-   # weekdays_jp = ["月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日", "日曜日"]
-   # weekday_jp = weekdays_jp[weekday]
-   # print(today)
-    #print(weekday_jp)
+    weekday = day_info.weekday() + 1
 
     prompt = f"""\\ 
     ## 指示
@@ -52,47 +121,12 @@ def ask_LLM():
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system","content": prompt},
+            {"role": "system", "content": prompt},
         ]
     )
 
-    print("Output:", response.choices[0].message.content)
-
-    # response.choices[0].message.contentをパース(解析)して、mysql_connect関数に渡す
-    output = response.choices[0].message.content.strip().split(',')
-    item_id, amount, date, memo, week_id = output[0], output[1], output[2], output[3], output[4]
-
-    mysql_connect(item_id, amount, date, memo, week_id)
-
-def mysql_connect(item_id, amount, date, memo, week_id):
-
-    #データベースに接続する
-    conn = MySQLdb.connect(
-        user="root",
-        passwd="Funao270",
-        host="localhost",
-        db="household_expenses_db")
-    
-    #カーソルを取得する
-    cur = conn.cursor()
-
-    #SQL文を実行する
-    sql = "INSERT INTO amount (item_id, amount, date, memo, week_id) VALUES (%s, %s, %s, %s, %s)"
-    # item_id  1 食費  2 住居費  3 水道光熱費  4 消耗品  5 交際費 6 交通費  7 自己投資費  8 その他
-    # week_id  1 Monday 2 Tuesday 3 Wednesday 4 Thursday 5 Friday 6 Saturday 7 Sunday
-    cur.execute(sql, (item_id, amount, date, memo, week_id))
-    # コミットして変更を確定する
-    conn.commit()
-
-    # データを取得するためのSQL文を実行する
-    cur.execute("SELECT * FROM amount")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-
-     #切断する
-    cur.close()
-    conn.close()
+    output = response.choices[0].message.content.strip()
+    return output
 
 def fetch_data():
     # データベースに接続
@@ -147,6 +181,6 @@ def plot_graph(df):
     plt.show()
 
 if __name__ == "__main__":
-    ask_LLM()
-    data = fetch_data()
-    plot_graph(data)
+    logger.info("Starting server...")  # サーバー起動時のログ
+    app.run(port=5000, debug=True)  # Flaskアプリケーションを起動
+    logger.info("Server finished.")  # サーバー起動後のログ
