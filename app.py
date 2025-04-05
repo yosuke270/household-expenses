@@ -82,12 +82,6 @@ def handle_message(event):
         plt.savefig(local_graph_path)
         logger.info("グラフを保存しました。")
 
-        # 画像をリサイズ
-        with Image.open(local_graph_path) as img:
-            img = img.resize((240, 240))  # 240×240にリサイズ
-            img.save(local_graph_path)  # 同じパスに上書き保存
-            logger.info("画像を240×240にリサイズしました。")
-
     except Exception as e:
         logger.error(f"グラフの保存中にエラーが発生しました: {e}")
         return  # エラーが発生した場合はここで処理を終了する
@@ -106,18 +100,12 @@ def handle_message(event):
             line_bot_api.reply_message_with_http_info(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
-                    messages=[
-                        {
-                            "type": "image",
-                            "originalContentUrl": encoded_graph_path,
-                            "previewImageUrl": encoded_graph_path
-                        }
-                    ]
+                    messages=[TextMessage(text=encoded_graph_path)]
+                    
                 )
             )
         except Exception as e:
             logger.error(f"LINEメッセージの送信中にエラーが発生しました: {e}")
-            logger.error(f"送信しようとしたURL: {encoded_graph_path}")
 def ask_LLM(user_input):
     logger.info(user_input)
     api_key = os.environ["ChatGPT_API"]
