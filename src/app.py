@@ -236,7 +236,7 @@ def plot_graph(df):
 
 @app.route("/<filename>")
 def serve_image(filename):
-    return send_from_directory(".", filename)
+    return send_from_directory("./images", filename)
 
 if __name__ == "__main__":
     logger.info("Starting server...")  # サーバー起動時のログ
