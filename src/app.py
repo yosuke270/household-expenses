@@ -207,7 +207,7 @@ def fetch_data():
     return df
 
 def plot_graph(df):
-    # 項目名を設定
+    # 項目名を設定nn
     item_labels = {
         1: "食費",
         2: "住居費",
@@ -236,7 +236,7 @@ def plot_graph(df):
 
 @app.route("/<filename>")
 def serve_image(filename):
-    return send_from_directory("./images", filename)
+    return send_from_directory(".", filename)
 
 if __name__ == "__main__":
     logger.info("Starting server...")  # サーバー起動時のログ
