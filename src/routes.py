@@ -20,7 +20,9 @@ import matplotlib.pyplot as plt
 configuration = Configuration(access_token=os.environ["LINE_CHANNEL_ACCESS_TOKEN"])
 handler = WebhookHandler(os.environ["LINE_CHANNEL_SECRET"])
 ngrok_url = "https://549d-240b-10-bf66-df00-a079-30ee-1cd3-8f49.ngrok-free.app/"
-
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+folder_path = "images"
+filename = "graph.png"
 def callback():
     logger.info("A")
     signature = request.headers['X-Line-Signature']
@@ -39,7 +41,7 @@ def handle_message(event):
     LLManswer = ask_LLM(userinput)
     data = fetch_data()
     plot_graph(data)
-    local_graph_path = os.path.abspath("output_graph.png")
+    local_graph_path = os.path.join(project_root, folder_path, filename)
     try:
         plt.savefig(local_graph_path)
         logger.info("グラフを保存しました。")
@@ -53,8 +55,9 @@ def handle_message(event):
     logger.info("送信側")
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        encoded_graph_path = quote(os.path.join(ngrok_url, "output_graph.png"), safe=":/")
+        encoded_graph_path = quote(os.path.join(ngrok_url, filename), safe=":/")
         try:
+            logger.info({encoded_graph_path})    
             line_bot_api.reply_message_with_http_info(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
