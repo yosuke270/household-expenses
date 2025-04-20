@@ -1,11 +1,9 @@
 from flask import Flask, request, send_from_directory
-from routes import callback,handle_message
+from routes.line_webhook import callback,handle_message
 from utils.logger import logger
-import os
 
 # Flaskアプリケーションのインスタンスを作成
 app = Flask(__name__)
-
 # appにurl_ruleを追加。設定したurlにアクセスしたときに呼び出される関数を指定。
 app.add_url_rule("/callback", methods=["POST"], view_func=callback)
 app.add_url_rule("/<filename>", view_func=lambda filename: send_from_directory("../images", filename))

@@ -23,12 +23,14 @@ ngrok_url = "https://549d-240b-10-bf66-df00-a079-30ee-1cd3-8f49.ngrok-free.app/"
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 folder_path = "images"
 filename = "graph.png"
+#ライン公式に基づきcallcack関数を定義。Lineのプラットフォームから送信されるリクエストヘッダに含まれる署名を取得
 def callback():
-    logger.info("A")
     signature = request.headers['X-Line-Signature']
     body = request.get_data(as_text=True)
     logger.info("Request body: " + body)
     try:
+        #署名を検証し、正当なリクエストかどうかを確認
+        #署名が正当な場合、handleメソッドを呼び出す。
         handler.handle(body, signature)
     except InvalidSignatureError:
         logger.info("Invalid signature. Please check your channel access token/channel secret.")
@@ -38,7 +40,7 @@ def callback():
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
     userinput = event.message.text
-    LLManswer = ask_LLM(userinput)
+    ask_LLM(userinput)
     data = fetch_data()
     plot_graph(data)
     local_graph_path = os.path.join(project_root, folder_path, filename)
@@ -48,19 +50,14 @@ def handle_message(event):
     except Exception as e:
         logger.error(f"グラフの保存中にエラーが発生しました: {e}")
         return
-    if not os.path.exists(local_graph_path):
-        logger.error(f"グラフファイルが見つかりません: {local_graph_path}")
-        return
-    logger.info("###################")
-    logger.info("送信側")
+   
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        encoded_graph_path = quote(os.path.join(ngrok_url, filename), safe=":/")
+        encoded_graph_path = os.path.join(ngrok_url, filename)
         try:
-            logger.info({encoded_graph_path})    
             line_bot_api.reply_message_with_http_info(
                 ReplyMessageRequest(
-                    reply_token=event.reply_token,
+                    reply_token=event.reply_token, #どのユーザのトークに返信するか識別
                     messages=[TextMessage(text=encoded_graph_path)]
                 )
             )
