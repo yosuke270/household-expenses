@@ -1,47 +1,37 @@
-/*************  ✨ Codeium Command ⭐  *************/
-# household-expenses-bot
+###使用方法
+1.ngrokを起動
+~~~
+ngrok http 5000
+~~~
 
-LINE Bot for household expenses management.
+2.Forwarding に記載されているURLをLINE DevelopersのWebhookに登録する
+写真
 
-## Description
+3.app.pyのngrok_urlをForwarding に記載されているURLに変更する
 
-This bot is for household expenses management. You can input your expenses and the bot will analyze and summarize them. The bot also provides a graph showing the total expenses for each category.
 
-## Features
+4.アプリケーションを実行する
+~~~
+python app.py
+~~~
 
-- Input your expenses with the following format: "item_id, amount, date, memo, week_id"
-- The bot will analyze and summarize your expenses
-- The bot will provide a graph showing the total expenses for each category
-- The bot will respond with a message showing the total expenses for each category
 
-## Usage
+＝＝＝＝＝＝＝＝＝
+勉強メモ
+＝＝＝＝＝＝＝＝＝
 
-1. Add the bot as a friend on LINE
-2. Input your expenses with the above format
-3. The bot will respond with a message showing the total expenses for each category
+①Flaskを実行すると引数で指定されたportやモードでwebサーバを起動する
+②実行された後は、リクエストの待機を行う
 
-## item_id
+①Lineのプラットフォームから、app.pyにリクエストが飛んでくる
+②Flaskのデコレータがつけれたcallback関数が受け取る
+③callback関数内のhandler.handle(body, signature)で内容を受け取り、@handler.add(MessageEvent, message=TextMessageContent)が実行される
 
-The item_id is the identifier for each category. The item_id is as follows:
+＝＝＝＝＝＝＝＝＝
+雑多な知識
+＝＝＝＝＝＝＝＝＝
+lambda関数
+引数として使いたいような単純な関数はlambda関数として実行する
 
-- 1: Food
-- 2: Housing
-- 3: Utilities
-- 4: Consumables
-- 5: Social expenses
-- 6: Transportation
-- 7: Personal investment
-- 8: Other
-
-## week_id
-
-The week_id is the identifier for each day of the week. The week_id is as follows:
-
-- 1: Monday
-- 2: Tuesday
-- 3: Wednesday
-- 4: Thursday
-- 5: Friday
-- 6: Saturday
-- 7: Sunday
-/******  a7f88b52-09d3-4ec9-bc1b-b37d4a0324c5  *******/
+folder構成参考
+https://tarovlog.com/2024/10/21/react-summary-folder-structure/
