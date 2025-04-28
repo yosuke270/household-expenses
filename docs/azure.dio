@@ -1,0 +1,25 @@
+<mxfile host="65bd71144e">
+    <diagram id="1IQ-MYn1hgej9a9-wLmq" name="ページ1">
+        <mxGraphModel dx="174" dy="114" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="4" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/compute/Function_Apps.svg;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="282" width="68" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="" style="image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/BlobBlock.svg;" parent="1" vertex="1">
+                    <mxGeometry x="290" y="429" width="50" height="42" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/integration/Event_Grid_Domains.svg;" parent="1" vertex="1">
+                    <mxGeometry x="490" y="420" width="67" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/security/Key_Vaults.svg;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="342" width="68" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;fillColor=#FF6A00;strokeColor=none;shape=mxgraph.alibaba_cloud.adb_analyticdb_for_mysql;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="480" width="48.9" height="54.900000000000006" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

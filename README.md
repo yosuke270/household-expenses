@@ -35,3 +35,20 @@ lambda関数
 
 folder構成参考
 https://tarovlog.com/2024/10/21/react-summary-folder-structure/
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+python仮想環境
+
+PS C:\Users\funak\funao\家計簿\household-expenses> Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+PS C:\Users\funak\funao\家計簿\household-expenses> .\expenses\Scripts\activate     
+(expenses) PS C:\Users\funak\funao\家計簿\household-expenses> 
+
+
+(expenses) PS C:\Users\funak\funao\家計簿\household-expenses> deactivate 
+＝＝＝＝＝＝＝＝＝＝＝＝
+学び
+オンプレ環境で作ったものを、クラウドネイティブなものに変更するには手間とコストがかかる
+クラウドでやることが決まっているなら最初からクラウドを使う設計をしたほうがいい
+
+ただ、クラウドの設計ができる様になるためには自分でサービスを作ったことがないと難しい
