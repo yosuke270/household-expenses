@@ -19,9 +19,9 @@ import matplotlib.pyplot as plt
 
 configuration = Configuration(access_token=os.environ["LINE_CHANNEL_ACCESS_TOKEN"])
 handler = WebhookHandler(os.environ["LINE_CHANNEL_SECRET"])
-ngrok_url = "https://549d-240b-10-bf66-df00-a079-30ee-1cd3-8f49.ngrok-free.app/"
+ngrok_url = "https://7f65-2400-2200-6e7-ff04-94ee-3c74-43c6-afcd.ngrok-free.app/"
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-folder_path = "images"
+folder_path = "../images"
 filename = "graph.png"
 #ライン公式に基づきcallcack関数を定義。Lineのプラットフォームから送信されるリクエストヘッダに含まれる署名を取得
 def callback():
