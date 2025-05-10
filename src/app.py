@@ -5,7 +5,7 @@ from utils.logger import logger
 # Flaskアプリケーションのインスタンスを作成
 app = Flask(__name__)
 # appにurl_ruleを追加。設定したurlにアクセスしたときに呼び出される関数を指定。
-app.add_url_rule("/callback", methods=["POST"], view_func=callback)
+app.add_url_rule("/api/app_by_http_trigger", methods=["POST"], view_func=callback)
 app.add_url_rule("/<filename>", view_func=lambda filename: send_from_directory("../images", filename))
 
 

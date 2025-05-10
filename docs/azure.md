@@ -37,6 +37,9 @@
 
       [アーキテクテャスタイル　microsoft](https://learn.microsoft.com/ja-jp/azure/architecture/guide/architecture-styles/)
 
+      [アーキテクチャ設計参考](https://qiita.com/bluesea_nishi/items/921d1eeb2b4e3e836474)
+
+
    3. どのサービスを使うか検討する
    4. 10の設計原則を考慮する
    
@@ -95,3 +98,43 @@ proxyとskeltonのような関係で、サービスを使う側がイベント�
 イベントドリブンアーキテクチャで設計を行う
 [無知から始めるイベントドリブンアーキテクチャ](https://qiita.com/Suzuki_Cecil/items/a51d353c73e9277f46d8)
 
+1. 使用するサービスの検討
+
+
+   1. ホスト先のサービス
+      今回はイベントドリブンなのでAzure Functionsを選択
+      [ホスティング先選定フローチャート](https://learn.microsoft.com/ja-jp/azure/architecture/guide/technology-choices/compute-decision-tree)
+
+   2. データベース選定
+      今回は将来AWSでの実装も考えているのでAzure Database for MySQLを選択
+      [Azure上のデータベース](https://azure.microsoft.com/ja-jp/products/category/databases/#:~:text=%E3%82%A4%E3%83%B3%E3%83%86%E3%83%AA%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%A7%E7%84%A1%E5%88%B6%E9%99%90%E3%81%AE%E4%BF%A1%E9%A0%BC%E3%81%A7%E3%81%8D%E3%82%8B%E3%82%AF%E3%83%A9%E3%82%A6%E3%83%89%20%E3%83%87%E3%83%BC%E3%82%BF%E3%83%99%E3%83%BC%E3%82%B9%E3%82%92%E4%BD%BF%E7%94%A8%E3%81%97%E3%81%A6%E3%80%81%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%E6%A7%8B%E7%AF%89%E3%81%97%E3%80%81%E5%A4%89%E6%8F%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%20Azure%20%E3%81%A7%E3%81%AF%E3%80%81%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E3%83%8B%E3%83%BC%E3%82%BA%E3%81%AB%E5%90%88%E3%82%8F%E3%81%9B%E3%81%A6%E3%83%AA%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%8A%E3%83%AB,%E3%83%87%E3%83%BC%E3%82%BF%E3%83%99%E3%83%BC%E3%82%B9%E3%81%A8%E9%9D%9E%E3%83%AA%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%8A%E3%83%AB%20%E3%83%87%E3%83%BC%E3%82%BF%E3%83%99%E3%83%BC%E3%82%B9%E3%82%92%E9%81%B8%E6%8A%9E%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%99%E3%80%82%20%E7%B5%84%E3%81%BF%E8%BE%BC%E3%81%BF%E3%81%AE%E3%82%A4%E3%83%B3%E3%83%86%E3%83%AA%E3%82%B8%E3%82%A7%E3%83%B3%E3%82%B9%E3%81%AF%E3%80%81%E9%AB%98%E5%8F%AF%E7%94%A8%E6%80%A7%E3%80%81%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%B0%E3%80%81%E3%82%AF%E3%82%A8%E3%83%AA%20%E3%83%91%E3%83%95%E3%82%A9%E3%83%BC%E3%83%9E%E3%83%B3%E3%82%B9%E3%83%81%E3%83%A5%E3%83%BC%E3%83%8B%E3%83%B3%E3%82%B0%E3%81%AA%E3%81%A9%E3%81%AE%E7%AE%A1%E7%90%86%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E8%87%AA%E5%8B%95%E5%8C%96%E3%81%99%E3%82%8B%E3%81%AE%E3%81%AB%E5%BD%B9%E7%AB%8B%E3%81%A1%E3%81%BE%E3%81%99%E3%80%82?msockid=33b6bcaef875631c33d7a8a7f906622e)
+
+   3. キューイングサービス
+      今回の作成するサービスはユーザが少ないことと、コードの複雑化を避けるため非同期処理は使用しない為キューイングサービスも使用しない
+      仮に今後ユーザが増える、もしくはLineからの応答速度が余りにも遅い場合キューイングサービスを利用し非同期処理を加えるかもしれない。（使うとしたら、ASKLLM関数の部分は外部APIを利用しているので、バックエンドでASKLLMを呼び出している間に応答処理を加えるかもしれない）
+
+   4. グローバル負荷分散
+      必要性は感じつつも、予算の関係上利用をひかえる。
+      可用性向上には必要
+
+   5. 静的コンテンツの保護
+      Azure Front Door Premium で Private Link を利用することで、Azure Database for MySQLへの通信やAzure Functionsへの通信をプライベートネットワーク内に限定して、パブリックのインターネットからアクセスができなくなる。
+      今回は個人情報や機密性の高い情報を使用しないので、private linkの利用は見送る
+
+
+2. NWの検討
+   [参考](https://qiita.com/bluesea_nishi/items/400d94915eda231a7702)
+   1. VNet構成
+   今回のプロジェクトは小規模の為１つのVNetにすべての機能を集約する
+   中規模のプロジェクトになれば、HUB＆SPOKE構造を利用して、よく使うサービス（ファイヤーウォールやアプリケーションゲートウェイなど）をHUB VNetに配置し、その他のサービスをSPOKE VNETに配置するのがよい
+
+   2. VNetからのアウトバウンド通信
+   今回のプロジェクトでは、OpenAIのChatGPTを使用しているので設定する必要がある。
+   アウトバウンド通信の許可にはAzure Firewallの設定やAzure NAT Gatewayを設定する必要がある。今回はコスト面で有利なNATを利用する
+   [NATとはなにか？](https://www.bing.com/videos/riverview/relatedvideo?&q=%e3%83%8d%e3%83%83%e3%83%88%e3%83%af%e3%83%bc%e3%82%af+%e3%82%a2%e3%83%89%e3%83%ac%e3%82%b9%e5%a4%89%e6%8f%9b%e3%81%95%e3%83%bc%e3%81%b3%e3%81%99&&mid=849C74369C2335A57CF5849C74369C2335A57CF5&&mcid=ECD635B404B54BE7A48B6AD99002921E&FORM=VRDGAR)
+
+   3. プライベート通信の実現
+   VNetからAzureのPaaSサービスを使用する場合プライベートリンクやVNet統合をする必要がある。
+   今回はAzure Database for MySQLを利用するので設定が必要？
+   プライベートリンクはただのインターフェース。
+   [プライベートリンクとは](https://www.youtube.com/watch?v=bo88q4JPOR0)
